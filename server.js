@@ -4,8 +4,14 @@ const cors = require("cors");
 const bcrypt = require("bcrypt");
 
 const app = express();
+
 app.use(cors());
 app.use(express.json());
+
+// Health check
+app.get("/", (req, res) => {
+  res.send("HireHub Backend is running 🚀");
+});
 
 // MongoDB connection
 mongoose.connect(process.env.MONGO_URI)
@@ -20,15 +26,11 @@ app.post("/register", async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Check duplicate email
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({
-        message: "Email already registered"
-      });
+      return res.status(400).json({ message: "Email already registered" });
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = new User({
@@ -37,10 +39,7 @@ app.post("/register", async (req, res) => {
     });
 
     await user.save();
-
-    res.json({
-      message: "User Registered Successfully"
-    });
+    res.json({ message: "User Registered Successfully" });
 
   } catch (error) {
     console.error("REGISTER ERROR:", error);
@@ -62,9 +61,7 @@ app.post("/login", async (req, res) => {
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({
-        message: "Incorrect password"
-      });
+      return res.status(400).json({ message: "Incorrect password" });
     }
 
     res.json({
@@ -79,6 +76,7 @@ app.post("/login", async (req, res) => {
 });
 
 /* ================= START SERVER ================= */
-app.listen(5000, () => {
-  console.log("Server running on port 5000");
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log("Server running on port", PORT);
 });
